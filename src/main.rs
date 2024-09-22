@@ -34,6 +34,7 @@ struct Application {
     fractal_type: FractalType,
     shading_type: ShadingType,
     color_scheme: ColorScheme,
+    palatte_speed: f32,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -103,6 +104,7 @@ impl Application {
             fractal_type: FractalType::Mandelbrot,
             shading_type: ShadingType::Smooth,
             color_scheme: ColorScheme::MIDNIGHTAMBER,
+            palatte_speed: 0.05,
         }
     }
 
@@ -122,6 +124,8 @@ impl Application {
                 fractal_type: self.fractal_type as u32,
                 shading_type: self.shading_type as u32,
                 color_scheme: self.color_scheme.into(),
+                palatte_speed: self.palatte_speed,
+                _p1: Default::default(),
             },
         ));
     }
@@ -223,6 +227,14 @@ impl eframe::App for Application {
                         );
                         ui.radio_value(&mut self.fractal_type, FractalType::Tricorn, "Tricorn");
                     });
+
+                    ui.label("Palatte Speed: ");
+                    ui.add(
+                        egui::Slider::new(&mut self.palatte_speed, 0.0..=1.0)
+                            .logarithmic(true)
+                            .clamp_to_range(false)
+                            .smart_aim(true),
+                    );
 
                     ui.label("Color Scheme: ");
                     ui.horizontal_wrapped(|ui| {

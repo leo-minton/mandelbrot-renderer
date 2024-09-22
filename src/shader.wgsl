@@ -27,6 +27,7 @@ struct Uniforms {
     fractal_type: u32,
     shading_type: u32,
     color_scheme: ColorScheme,
+    palatte_speed: f32,
 }
 
 struct ColorScheme {
@@ -80,12 +81,13 @@ fn mandellike(c: vec2<f32>, fractal_type: u32) -> f32 {
     for (var i: i32 = 0; i < uniforms.max_iter; i = i + 1) {
         var zn_sq = z.x * z.x + z.y * z.y;
         if zn_sq >= escape_sq {
+            var out: f32;
             switch uniforms.shading_type {
                 case u32(0) {
-                    return f32(i) * 0.05;
+                    return max(f32(i) - 2.0, 0.0);
                 }
                 case u32(1) {
-                    return (f32(i) - saturate(log(log(zn_sq) / (2.0 * log_escape)) / log_exponent)) * 0.05;
+                    return max(f32(i) - 2.0 - saturate(log(log(zn_sq) / (2.0 * log_escape)) / log_exponent), 0.0);
                 }
                 case default {
                     return 0.0;
@@ -149,7 +151,7 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
     }
 
     let color = pal(
-        res,
+        res * uniforms.palatte_speed,
         uniforms.color_scheme.a,
         uniforms.color_scheme.b,
         uniforms.color_scheme.c,

@@ -118,6 +118,8 @@ pub struct RenderCallback {
     pub fractal_type: u32,
     pub shading_type: u32,
     pub color_scheme: ColorSchemeCallback,
+    pub palatte_speed: f32,
+    pub _p1: [u8; 12],
 }
 
 #[repr(C, align(16))]
