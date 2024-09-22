@@ -39,10 +39,10 @@ struct Application {
     fractal_type: FractalType,
     shading_type: ShadingType,
     color_scheme: ColorScheme,
-    palatte_speed: f32,
+    palette_speed: f32,
 }
 
-/// Contains a cosine color palatte for the shader
+/// Contains a cosine color palette for the shader
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct ColorScheme {
     pub a: [f32; 3],
@@ -55,7 +55,7 @@ impl ColorScheme {
     pub const fn new(a: [f32; 3], b: [f32; 3], c: [f32; 3], d: [f32; 3]) -> Self {
         Self { a, b, c, d }
     }
-    // A few color palattes from here: https://iquilezles.org/articles/palettes/
+    // A few color palettes from here: https://iquilezles.org/articles/palettes/
     const RAINBOW: Self = Self::new([0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [1.0, 1.0, 1.0], [0.00, 0.33, 0.67]);
     const EARTH: Self = Self::new([0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [1.0, 1.0, 1.0], [0.00, 0.10, 0.20]);
     const SKY: Self = Self::new([0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [1.0, 1.0, 1.0], [0.30, 0.20, 0.20]);
@@ -113,7 +113,7 @@ impl Application {
             fractal_type: FractalType::Mandelbrot,
             shading_type: ShadingType::Smooth,
             color_scheme: ColorScheme::MIDNIGHTAMBER,
-            palatte_speed: 0.05,
+            palette_speed: 0.05,
         }
     }
 
@@ -134,7 +134,7 @@ impl Application {
                 fractal_type: self.fractal_type as u32,
                 shading_type: self.shading_type as u32,
                 color_scheme: self.color_scheme.into(),
-                palatte_speed: self.palatte_speed,
+                palette_speed: self.palette_speed,
                 _p1: Default::default(),
             },
         ));
@@ -247,9 +247,9 @@ impl eframe::App for Application {
                         ui.radio_value(&mut self.fractal_type, FractalType::Tricorn, "Tricorn");
                     });
 
-                    ui.label("Palatte Speed: ");
+                    ui.label("palette Speed: ");
                     ui.add(
-                        egui::Slider::new(&mut self.palatte_speed, 0.0..=1.0)
+                        egui::Slider::new(&mut self.palette_speed, 0.0..=1.0)
                             .logarithmic(true)
                             .clamp_to_range(false)
                             .smart_aim(true),

@@ -28,7 +28,7 @@ struct Uniforms {
     fractal_type: u32,
     shading_type: u32,
     color_scheme: ColorScheme,
-    palatte_speed: f32,
+    palette_speed: f32,
 }
 
 struct ColorScheme {
@@ -153,7 +153,7 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
     }
 
     let color = pal(
-        res * uniforms.palatte_speed,
+        res * uniforms.palette_speed,
         uniforms.color_scheme.a,
         uniforms.color_scheme.b,
         uniforms.color_scheme.c,

@@ -124,11 +124,11 @@ pub struct RenderCallback {
     pub fractal_type: u32,
     pub shading_type: u32,
     pub color_scheme: ColorSchemeCallback,
-    pub palatte_speed: f32,
+    pub palette_speed: f32,
     pub _p1: [u8; 12],
 }
 
-/// The callback containing the palatte data. The extra f32 in each vec3 is for padding.
+/// The callback containing the palette data. The extra f32 in each vec3 is for padding.
 #[repr(C, align(16))]
 #[derive(Debug, Copy, Clone, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct ColorSchemeCallback {
