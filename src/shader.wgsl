@@ -1,3 +1,4 @@
+// vertex shader creating two triangles covering the screen
 @vertex
 fn vs_main(@builtin(vertex_index) vertex_index: u32) -> @builtin(position) vec4<f32> {
     var positions = array<vec2<f32>, 6>(
@@ -37,6 +38,7 @@ struct ColorScheme {
     d: vec3<f32>,
 }
 
+// simple pallate function from here: https://iquilezles.org/articles/palettes/
 fn pal(t: f32, a: vec3<f32>, b: vec3<f32>, c: vec3<f32>, d: vec3<f32>) -> vec3<f32> {
     return a + b * cos(6.28318 * (c * t + d));
 }

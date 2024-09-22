@@ -8,6 +8,8 @@ use crate::ColorScheme;
 
 const SHADER_SOURCE: &str = include_str!("shader.wgsl");
 
+
+/// Compile and link the shaders
 pub fn init(wgpu_render_state: &RenderState) {
     let device = &wgpu_render_state.device;
 
@@ -74,7 +76,7 @@ pub fn init(wgpu_render_state: &RenderState) {
     });
 
     // Because the graphics pipeline must have the same lifetime as the egui render pass,
-    // instead of storing the pipeline in our `Custom3D` struct, we insert it into the
+    // instead of storing the pipeline in our `Application` struct, we insert it into the
     // `paint_callback_resources` type map, which is stored alongside the render pass.
     wgpu_render_state
         .renderer
@@ -87,6 +89,7 @@ pub fn init(wgpu_render_state: &RenderState) {
         });
 }
 
+/// The render resources stored with wgpu
 struct RenderResources {
     pipeline: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
@@ -94,6 +97,7 @@ struct RenderResources {
 }
 
 impl RenderResources {
+    /// Send the RenderCallback to the shader
     fn prepare(&self, _device: &wgpu::Device, queue: &wgpu::Queue, info: &RenderCallback) {
         queue.write_buffer(&self.uniform_buffer, 0, bytemuck::bytes_of(info))
     }
@@ -105,6 +109,8 @@ impl RenderResources {
     }
 }
 
+/// The data sent to the GPU. It must match the shader struct exactly 
+/// and cannot have any padding. ([`bytemuck::Pod`] prevents it from compiling if it does)
 #[repr(C, align(16))]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct RenderCallback {
@@ -122,6 +128,7 @@ pub struct RenderCallback {
     pub _p1: [u8; 12],
 }
 
+/// The callback containing the palatte data. The extra f32 in each vec3 is for padding.
 #[repr(C, align(16))]
 #[derive(Debug, Copy, Clone, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct ColorSchemeCallback {
@@ -131,9 +138,11 @@ pub struct ColorSchemeCallback {
     pub d: [f32; 4],
 }
 
+/// Small utility function to pad an `[f32; 3]` with an extra [`f32`]
 fn extend(arr: [f32; 3]) -> [f32; 4] {
     [arr[0], arr[1], arr[2], 0.0]
 }
+
 impl From<ColorScheme> for ColorSchemeCallback {
     fn from(value: ColorScheme) -> Self {
         Self {

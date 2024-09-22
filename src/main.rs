@@ -13,6 +13,7 @@ use eframe::{
 use vector2::*;
 
 fn main() -> eframe::Result {
+    // Viewport options
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_active(true),
@@ -20,6 +21,8 @@ fn main() -> eframe::Result {
         renderer: eframe::Renderer::Wgpu,
         ..Default::default()
     };
+
+    // Start the program
     eframe::run_native(
         "Fractal Viewer",
         options,
@@ -27,6 +30,8 @@ fn main() -> eframe::Result {
     )
 }
 
+
+/// Struct containing all application state info
 struct Application {
     camera: CameraInfo,
     max_iter: i32,
@@ -37,6 +42,7 @@ struct Application {
     palatte_speed: f32,
 }
 
+/// Contains a cosine color palatte for the shader
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct ColorScheme {
     pub a: [f32; 3],
@@ -49,6 +55,7 @@ impl ColorScheme {
     pub const fn new(a: [f32; 3], b: [f32; 3], c: [f32; 3], d: [f32; 3]) -> Self {
         Self { a, b, c, d }
     }
+    // A few color palattes from here: https://iquilezles.org/articles/palettes/
     const RAINBOW: Self = Self::new([0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [1.0, 1.0, 1.0], [0.00, 0.33, 0.67]);
     const EARTH: Self = Self::new([0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [1.0, 1.0, 1.0], [0.00, 0.10, 0.20]);
     const SKY: Self = Self::new([0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [1.0, 1.0, 1.0], [0.30, 0.20, 0.20]);
@@ -91,13 +98,15 @@ impl Default for CameraInfo {
 
 impl Application {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        // Get the WGPU render state
         let wgpu_render_state = cc
             .wgpu_render_state
             .as_ref()
             .expect("You need to run eframe with the wgpu backend");
 
+        // compile and link the shader program
         shader::init(wgpu_render_state);
-        Self {
+        Self { // Setup the initial settings
             camera: CameraInfo::default(),
             max_iter: 1024,
             exponent: 2.0,
@@ -108,6 +117,7 @@ impl Application {
         }
     }
 
+    /// Custom WGPU shader painting and input processing
     fn custom_painting(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
         let rect = self.inputs(ui, ctx);
 
@@ -130,10 +140,12 @@ impl Application {
         ));
     }
 
+    /// Input processing
     fn inputs(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) -> Rect {
         let size = ui.available_size();
         let (rect, response) = ui.allocate_exact_size(size, Sense::drag());
 
+        // Get the scale of the viewport relative to world coordinates
         let viewport_scale = rect.width().min(rect.height());
 
         // Get the mouse position in normalized device coordinates (NDC)
@@ -146,6 +158,7 @@ impl Application {
         // Calculate the world position under the mouse before zooming
         let world_before_zoom = self.camera.pos + mouse_ndc * self.camera.zoom;
 
+        // Zooming
         ctx.input(|i| {
             self.camera.zoom *= 1.01_f64.powf(-i.raw_scroll_delta.y as f64);
 
@@ -159,6 +172,7 @@ impl Application {
         // Adjust camera position to keep the world position under the mouse constant
         self.camera.pos += world_after_zoom - world_before_zoom;
 
+        // Drag handling
         let drag_motion: Vector2f = response.drag_motion().into();
         let mut drag_delta: Vector2d = Vector2d::new(drag_motion.x as f64, drag_motion.y as f64);
         drag_delta /= viewport_scale as f64;
@@ -171,6 +185,8 @@ impl Application {
 
 impl eframe::App for Application {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Check for if the F11 key is pressed
+        // ctx.send_viewport_cmd crashes the program when it is called inside of ctx.input
         let mut do_fullscreen = false;
         ctx.input(|i| {
             if i.key_pressed(egui::Key::F11) {
@@ -182,9 +198,12 @@ impl eframe::App for Application {
                 !ctx.input(|i| i.viewport().fullscreen.unwrap_or(false)),
             ))
         }
+
+        // Render the settings panel
         egui::SidePanel::right("settings_panel")
             .resizable(true)
             .show(ctx, |ui| {
+                // Double the size of the sliders (the default is 100)
                 ui.spacing_mut().slider_width = 200.0;
                 ui.vertical_centered(|ui| {
                     if ui.button("Reset camera").clicked() {
@@ -276,6 +295,8 @@ impl eframe::App for Application {
                     });
                 });
             });
+        
+        // Display the main shader and position info
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.columns(2, |columns| {
                 columns[0]
@@ -283,6 +304,8 @@ impl eframe::App for Application {
 
                 columns[1].vertical_centered(|ui| ui.label(format!("zoom: {}", self.camera.zoom)));
             });
+
+            // Make a canvas for the shader
             egui::Frame::canvas(ui.style()).show(ui, |ui| {
                 self.custom_painting(ui, ctx);
             });
