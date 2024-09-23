@@ -33,6 +33,7 @@ struct Uniforms {
     julia_pos: vec2<f32>,
 }
 
+// color scheme data
 struct ColorScheme {
     a: vec3<f32>,
     b: vec3<f32>,
@@ -40,7 +41,7 @@ struct ColorScheme {
     d: vec3<f32>,
 }
 
-// simple pallate function from here: https://iquilezles.org/articles/palettes/
+// simple palette function from here: https://iquilezles.org/articles/palettes/
 fn pal(t: f32, a: vec3<f32>, b: vec3<f32>, c: vec3<f32>, d: vec3<f32>) -> vec3<f32> {
     return a + b * cos(6.28318 * (c * t + d));
 }

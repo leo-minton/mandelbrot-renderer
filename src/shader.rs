@@ -8,7 +8,6 @@ use crate::ColorScheme;
 
 const SHADER_SOURCE: &str = include_str!("shader.wgsl");
 
-
 /// Compile and link the shaders
 pub fn init(wgpu_render_state: &RenderState) {
     let device = &wgpu_render_state.device;
@@ -109,7 +108,7 @@ impl RenderResources {
     }
 }
 
-/// The data sent to the GPU. It must match the shader struct exactly 
+/// The data sent to the GPU. It must match the shader struct exactly
 /// and cannot have any padding. ([`bytemuck::Pod`] prevents it from compiling if it does)
 #[repr(C, align(16))]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]

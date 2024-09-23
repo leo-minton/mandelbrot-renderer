@@ -3,6 +3,7 @@
 #![allow(clippy::missing_panics_doc)]
 
 pub mod shader;
+pub mod ui;
 pub mod vector2;
 
 use eframe::{
@@ -15,8 +16,7 @@ use vector2::*;
 fn main() -> eframe::Result {
     // Viewport options
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default()
-            .with_active(true),
+        viewport: egui::ViewportBuilder::default().with_active(true),
         multisampling: 1,
         renderer: eframe::Renderer::Wgpu,
         ..Default::default()
@@ -30,7 +30,6 @@ fn main() -> eframe::Result {
     )
 }
 
-
 /// Struct containing all application state info
 struct Application {
     camera: CameraInfo,
@@ -41,7 +40,7 @@ struct Application {
     color_scheme: ColorScheme,
     palette_speed: f32,
     julia: bool,
-    julia_pos: Vector2d
+    julia_pos: Vector2d,
 }
 
 /// Contains a cosine color palette for the shader
@@ -53,6 +52,7 @@ pub struct ColorScheme {
     pub d: [f32; 3],
 }
 
+#[rustfmt::skip]
 impl ColorScheme {
     pub const fn new(a: [f32; 3], b: [f32; 3], c: [f32; 3], d: [f32; 3]) -> Self {
         Self { a, b, c, d }
@@ -65,7 +65,6 @@ impl ColorScheme {
     const MIDNIGHTAMBER: Self = Self::new([0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [1.0, 0.7, 0.4], [0.00, 0.15, 0.20]);
     const SUNSET: Self = Self::new([0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [2.0, 1.0, 0.0], [0.50, 0.20, 0.25]);
     const CRIMSON: Self = Self::new([0.8, 0.5, 0.4], [0.2, 0.4, 0.2], [2.0, 1.0, 1.0], [0.00, 0.25, 0.25]);
-    
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -108,7 +107,8 @@ impl Application {
 
         // compile and link the shader program
         shader::init(wgpu_render_state);
-        Self { // Setup the initial settings
+        Self {
+            // Setup the initial settings
             camera: CameraInfo::default(),
             max_iter: 1024,
             exponent: 2.0,
@@ -180,171 +180,22 @@ impl Application {
         // Drag handling
         if response.dragged_by(egui::PointerButton::Primary) {
             let drag_motion: Vector2f = response.drag_motion().into();
-            let mut drag_delta: Vector2d = Vector2d::new(drag_motion.x as f64, drag_motion.y as f64);
+            let mut drag_delta: Vector2d =
+                Vector2d::new(drag_motion.x as f64, drag_motion.y as f64);
             drag_delta /= viewport_scale as f64;
             drag_delta *= self.camera.zoom * 2.0;
-    
+
             self.camera.pos += drag_delta;
         }
         if response.secondary_clicked() || response.dragged_by(egui::PointerButton::Secondary) {
             let click_position: Vector2f = response.interact_pointer_pos().unwrap().into();
             self.julia_pos = (Vector2d::new(click_position.x as f64, click_position.y as f64)
-                               - Vector2d::new(rect.center().x as f64, rect.center().y as f64))
-                               / viewport_scale as f64 * 2.0 * self.camera.zoom + self.camera.pos;
-            
+                - Vector2d::new(rect.center().x as f64, rect.center().y as f64))
+                / viewport_scale as f64
+                * 2.0
+                * self.camera.zoom
+                + self.camera.pos;
         }
         rect
-    }
-}
-
-impl eframe::App for Application {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Check for if the F11 key is pressed
-        // ctx.send_viewport_cmd crashes the program when it is called inside of ctx.input
-        let mut do_fullscreen = false;
-        ctx.input(|i| {
-            if i.key_pressed(egui::Key::F11) {
-                do_fullscreen = true;
-            }
-        });
-        if do_fullscreen {
-            ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(
-                !ctx.input(|i| i.viewport().fullscreen.unwrap_or(false)),
-            ))
-        }
-
-        // Render the settings panel
-        egui::SidePanel::right("settings_panel")
-            .resizable(true)
-            .show(ctx, |ui| {
-                // Double the size of the sliders (the default is 100)
-                ui.spacing_mut().slider_width = 200.0;
-                ui.vertical_centered(|ui| {
-                    if ui.button("Reset camera").clicked() {
-                        self.camera = CameraInfo::default();
-                    }
-                });
-                ui.with_layout(egui::Layout::top_down_justified(egui::Align::Min), |ui| {
-                    ui.label("Max iterations: ");
-                    ui.add(
-                        egui::Slider::new(&mut self.max_iter, 1..=4096)
-                            .logarithmic(true)
-                            .clamp_to_range(false)
-                            .smart_aim(true),
-                    );
-
-                    ui.label("Exponent: ");
-                    ui.add(
-                        egui::Slider::new(&mut self.exponent, 0.0..=6.0)
-                            .clamp_to_range(false)
-                            .smart_aim(true),
-                    );
-
-                    ui.label("Fractal: ");
-                    ui.horizontal_wrapped(|ui| {
-                        ui.radio_value(
-                            &mut self.fractal_type,
-                            FractalType::Mandelbrot,
-                            "Mandelbrot",
-                        );
-                        ui.radio_value(
-                            &mut self.fractal_type,
-                            FractalType::BurningShip,
-                            "Burning Ship",
-                        );
-                        ui.radio_value(&mut self.fractal_type, FractalType::Tricorn, "Tricorn");
-                    });
-
-                    ui.separator();
-
-                    ui.checkbox(&mut self.julia, "Julia set");
-                    ui.label("Julia position: ");
-                    ui.add(
-                        egui::Slider::new(&mut self.julia_pos.x, -2.0..=2.0)
-                            .clamp_to_range(false)
-                            .smart_aim(true)
-                            .prefix("x: "),
-                    );
-                    ui.add(
-                        egui::Slider::new(&mut self.julia_pos.y, -2.0..=2.0)
-                            .clamp_to_range(false)
-                            .smart_aim(true)
-                            .prefix("y: "),
-                    );
-                    ui.label("Right click on the fractal to set the location of the julia set.");
-
-                    ui.separator();
-
-                    ui.label("Shading Type: ");
-                    ui.horizontal_wrapped(|ui| {
-                        ui.radio_value(&mut self.shading_type, ShadingType::Normal, "Normal");
-                        ui.radio_value(&mut self.shading_type, ShadingType::Smooth, "Smooth");
-                    });
-
-                    ui.label("Palette Speed: ");
-                    ui.add(
-                        egui::Slider::new(&mut self.palette_speed, 0.0..=1.0)
-                            .logarithmic(true)
-                            .clamp_to_range(false)
-                            .smart_aim(true),
-                    );
-
-                    ui.separator();
-
-                    ui.label("Color Scheme: ");
-                    ui.horizontal_wrapped(|ui| {
-                        ui.radio_value(
-                            &mut self.color_scheme,
-                            ColorScheme::EARTH,
-                            "Earth",
-                        );
-                        ui.radio_value(
-                            &mut self.color_scheme,
-                            ColorScheme::SKY,
-                            "Sky",
-                        );
-                        ui.radio_value(
-                            &mut self.color_scheme,
-                            ColorScheme::CRIMSON,
-                            "Crimson",
-                        );
-                        ui.radio_value(
-                            &mut self.color_scheme,
-                            ColorScheme::MIDNIGHTAMBER,
-                            "Midnight Amber",
-                        );
-                        ui.radio_value(
-                            &mut self.color_scheme,
-                            ColorScheme::RAINBOW,
-                            "Rainbow",
-                        );
-                        ui.radio_value(
-                            &mut self.color_scheme,
-                            ColorScheme::SUNSET,
-                            "Sunset",
-                        );
-                        ui.radio_value(
-                            &mut self.color_scheme,
-                            ColorScheme::MIDDAY,
-                            "Midday",
-                        );
-                    });
-                });
-            });
-        
-        // Display the main shader and position info
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.columns(2, |columns| {
-                columns[0]
-                    .vertical_centered(|ui| ui.label(format!("position: {}", self.camera.pos)));
-
-                columns[1].vertical_centered(|ui| ui.label(format!("zoom: {}", self.camera.zoom)));
-            });
-
-            // Make a canvas for the shader
-            egui::Frame::canvas(ui.style()).show(ui, |ui| {
-                self.custom_painting(ui, ctx);
-            });
-        });
     }
 }
