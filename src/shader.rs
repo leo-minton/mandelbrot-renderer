@@ -125,7 +125,8 @@ pub struct RenderCallback {
     pub shading_type: u32,
     pub color_scheme: ColorSchemeCallback,
     pub palette_speed: f32,
-    pub _p1: [u8; 12],
+    pub julia: u32,
+    pub julia_pos: [f32; 2],
 }
 
 /// The callback containing the palette data. The extra f32 in each vec3 is for padding.

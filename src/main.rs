@@ -40,6 +40,8 @@ struct Application {
     shading_type: ShadingType,
     color_scheme: ColorScheme,
     palette_speed: f32,
+    julia: bool,
+    julia_pos: Vector2d
 }
 
 /// Contains a cosine color palette for the shader
@@ -114,6 +116,8 @@ impl Application {
             shading_type: ShadingType::Smooth,
             color_scheme: ColorScheme::MIDNIGHTAMBER,
             palette_speed: 0.05,
+            julia: false,
+            julia_pos: Vector2d::default(),
         }
     }
 
@@ -135,7 +139,8 @@ impl Application {
                 shading_type: self.shading_type as u32,
                 color_scheme: self.color_scheme.into(),
                 palette_speed: self.palette_speed,
-                _p1: Default::default(),
+                julia: self.julia as u32,
+                julia_pos: (self.julia_pos.x as f32, self.julia_pos.y as f32).into(),
             },
         ));
     }
@@ -143,7 +148,7 @@ impl Application {
     /// Input processing
     fn inputs(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) -> Rect {
         let size = ui.available_size();
-        let (rect, response) = ui.allocate_exact_size(size, Sense::drag());
+        let (rect, response) = ui.allocate_exact_size(size, Sense::click_and_drag());
 
         // Get the scale of the viewport relative to world coordinates
         let viewport_scale = rect.width().min(rect.height());
@@ -173,12 +178,21 @@ impl Application {
         self.camera.pos += world_after_zoom - world_before_zoom;
 
         // Drag handling
-        let drag_motion: Vector2f = response.drag_motion().into();
-        let mut drag_delta: Vector2d = Vector2d::new(drag_motion.x as f64, drag_motion.y as f64);
-        drag_delta /= viewport_scale as f64;
-        drag_delta *= self.camera.zoom * 2.0;
-
-        self.camera.pos += drag_delta;
+        if response.dragged_by(egui::PointerButton::Primary) {
+            let drag_motion: Vector2f = response.drag_motion().into();
+            let mut drag_delta: Vector2d = Vector2d::new(drag_motion.x as f64, drag_motion.y as f64);
+            drag_delta /= viewport_scale as f64;
+            drag_delta *= self.camera.zoom * 2.0;
+    
+            self.camera.pos += drag_delta;
+        }
+        if response.secondary_clicked() || response.dragged_by(egui::PointerButton::Secondary) {
+            let click_position: Vector2f = response.interact_pointer_pos().unwrap().into();
+            self.julia_pos = (Vector2d::new(click_position.x as f64, click_position.y as f64)
+                               - Vector2d::new(rect.center().x as f64, rect.center().y as f64))
+                               / viewport_scale as f64 * 2.0 * self.camera.zoom + self.camera.pos;
+            
+        }
         rect
     }
 }
@@ -226,12 +240,6 @@ impl eframe::App for Application {
                             .smart_aim(true),
                     );
 
-                    ui.label("Shading Type: ");
-                    ui.horizontal_wrapped(|ui| {
-                        ui.radio_value(&mut self.shading_type, ShadingType::Normal, "Normal");
-                        ui.radio_value(&mut self.shading_type, ShadingType::Smooth, "Smooth");
-                    });
-
                     ui.label("Fractal: ");
                     ui.horizontal_wrapped(|ui| {
                         ui.radio_value(
@@ -247,13 +255,41 @@ impl eframe::App for Application {
                         ui.radio_value(&mut self.fractal_type, FractalType::Tricorn, "Tricorn");
                     });
 
-                    ui.label("palette Speed: ");
+                    ui.separator();
+
+                    ui.checkbox(&mut self.julia, "Julia set");
+                    ui.label("Julia position: ");
+                    ui.add(
+                        egui::Slider::new(&mut self.julia_pos.x, -2.0..=2.0)
+                            .clamp_to_range(false)
+                            .smart_aim(true)
+                            .prefix("x: "),
+                    );
+                    ui.add(
+                        egui::Slider::new(&mut self.julia_pos.y, -2.0..=2.0)
+                            .clamp_to_range(false)
+                            .smart_aim(true)
+                            .prefix("y: "),
+                    );
+                    ui.label("Right click on the fractal to set the location of the julia set.");
+
+                    ui.separator();
+
+                    ui.label("Shading Type: ");
+                    ui.horizontal_wrapped(|ui| {
+                        ui.radio_value(&mut self.shading_type, ShadingType::Normal, "Normal");
+                        ui.radio_value(&mut self.shading_type, ShadingType::Smooth, "Smooth");
+                    });
+
+                    ui.label("Palette Speed: ");
                     ui.add(
                         egui::Slider::new(&mut self.palette_speed, 0.0..=1.0)
                             .logarithmic(true)
                             .clamp_to_range(false)
                             .smart_aim(true),
                     );
+
+                    ui.separator();
 
                     ui.label("Color Scheme: ");
                     ui.horizontal_wrapped(|ui| {

@@ -1,4 +1,4 @@
-use eframe::egui::{Vec2, Vec2b};
+use eframe::egui::{Pos2, Vec2, Vec2b};
 
 use std::fmt::Display;
 
@@ -154,6 +154,12 @@ impl<T: Clone> From<(T, T)> for Vector2<T> {
 impl<T: Clone> From<[T; 2]> for Vector2<T> {
     fn from([x, y]: [T; 2]) -> Self {
         Self::new(x, y)
+    }
+}
+
+impl From<Pos2> for Vector2f {
+    fn from(value: Pos2) -> Self {
+        Self::new(value.x, value.y)
     }
 }
 

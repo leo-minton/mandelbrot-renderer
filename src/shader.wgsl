@@ -29,6 +29,8 @@ struct Uniforms {
     shading_type: u32,
     color_scheme: ColorScheme,
     palette_speed: f32,
+    julia: u32,
+    julia_pos: vec2<f32>,
 }
 
 struct ColorScheme {
@@ -72,8 +74,15 @@ fn exp_complex(z: vec2<f32>) -> vec2<f32> {
     return exp(z.x) * vec2<f32>(cos(z.y), sin(z.y));
 }
 
-fn mandellike(c: vec2<f32>, fractal_type: u32) -> f32 {
+fn mandellike(pos: vec2<f32>, fractal_type: u32) -> f32 {
     var z = vec2<f32>(0.0, 0.0);
+    var c: vec2<f32>;
+    if uniforms.julia == u32(1) {
+        z = pos;
+        c = uniforms.julia_pos;
+    } else {
+        c = pos;
+    }
 
     let escape = 4.0;
     let escape_sq = escape * escape;
