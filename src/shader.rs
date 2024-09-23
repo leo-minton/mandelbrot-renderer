@@ -96,9 +96,9 @@ struct RenderResources {
 }
 
 impl RenderResources {
-    /// Send the RenderCallback to the shader
+    /// Send the [`RenderCallback`] to the shader
     fn prepare(&self, _device: &wgpu::Device, queue: &wgpu::Queue, info: &RenderCallback) {
-        queue.write_buffer(&self.uniform_buffer, 0, bytemuck::bytes_of(info))
+        queue.write_buffer(&self.uniform_buffer, 0, bytemuck::bytes_of(info));
     }
 
     fn paint<'rp>(&'rp self, render_pass: &mut wgpu::RenderPass<'rp>) {
@@ -124,7 +124,7 @@ pub struct RenderCallback {
     pub shading_type: u32,
     pub color_scheme: ColorSchemeCallback,
     pub palette_speed: f32,
-    pub julia: u32,
+    pub flags: u32,
     pub julia_pos: [f32; 2],
 }
 

@@ -1,6 +1,12 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #![warn(clippy::pedantic)]
-#![allow(clippy::missing_panics_doc)]
+#![allow(
+    clippy::missing_panics_doc,
+    clippy::cast_lossless,
+    clippy::float_cmp,
+    clippy::cast_possible_truncation,
+    clippy::pub_underscore_fields
+)]
 
 pub mod shader;
 pub mod ui;
@@ -11,7 +17,7 @@ use eframe::{
     egui_wgpu,
 };
 
-use vector2::*;
+use vector2::{Vector2, Vector2d, Vector2f};
 
 fn main() -> eframe::Result {
     // Viewport options
@@ -41,6 +47,7 @@ struct Application {
     palette_speed: f32,
     julia: bool,
     julia_pos: Vector2d,
+    pertubation: bool,
 }
 
 /// Contains a cosine color palette for the shader
@@ -54,6 +61,7 @@ pub struct ColorScheme {
 
 #[rustfmt::skip]
 impl ColorScheme {
+    #[must_use]
     pub const fn new(a: [f32; 3], b: [f32; 3], c: [f32; 3], d: [f32; 3]) -> Self {
         Self { a, b, c, d }
     }
@@ -65,6 +73,7 @@ impl ColorScheme {
     const MIDNIGHTAMBER: Self = Self::new([0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [1.0, 0.7, 0.4], [0.00, 0.15, 0.20]);
     const SUNSET: Self = Self::new([0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [2.0, 1.0, 0.0], [0.50, 0.20, 0.25]);
     const CRIMSON: Self = Self::new([0.8, 0.5, 0.4], [0.2, 0.4, 0.2], [2.0, 1.0, 1.0], [0.00, 0.25, 0.25]);
+    const OCEAN: Self = Self::new([0.250, 0.500, 0.500], [0.198, 0.250, 0.250], [1.000, 1.000, 1.000], [0.900, 0.650, 0.800]);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -118,6 +127,7 @@ impl Application {
             palette_speed: 0.05,
             julia: false,
             julia_pos: Vector2d::default(),
+            pertubation: false,
         }
     }
 
@@ -139,7 +149,7 @@ impl Application {
                 shading_type: self.shading_type as u32,
                 color_scheme: self.color_scheme.into(),
                 palette_speed: self.palette_speed,
-                julia: self.julia as u32,
+                flags: (self.julia as u32) | ((self.pertubation as u32) << 1),
                 julia_pos: (self.julia_pos.x as f32, self.julia_pos.y as f32).into(),
             },
         ));
@@ -180,8 +190,7 @@ impl Application {
         // Drag handling
         if response.dragged_by(egui::PointerButton::Primary) {
             let drag_motion: Vector2f = response.drag_motion().into();
-            let mut drag_delta: Vector2d =
-                Vector2d::new(drag_motion.x as f64, drag_motion.y as f64);
+            let mut drag_delta: Vector2d = Vector2d::new(drag_motion.x as f64, drag_motion.y as f64);
             drag_delta /= viewport_scale as f64;
             drag_delta *= self.camera.zoom * 2.0;
 

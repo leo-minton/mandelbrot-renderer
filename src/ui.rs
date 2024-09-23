@@ -15,8 +15,8 @@ impl eframe::App for Application {
         if do_fullscreen {
             ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(
                 !ctx.input(|i| i.viewport().fullscreen.unwrap_or(false)),
-            ))
-        }
+            ));
+        };
 
         // Render the settings panel
         egui::SidePanel::right("settings_panel")
@@ -47,16 +47,8 @@ impl eframe::App for Application {
 
                     ui.label("Fractal: ");
                     ui.horizontal_wrapped(|ui| {
-                        ui.radio_value(
-                            &mut self.fractal_type,
-                            FractalType::Mandelbrot,
-                            "Mandelbrot",
-                        );
-                        ui.radio_value(
-                            &mut self.fractal_type,
-                            FractalType::BurningShip,
-                            "Burning Ship",
-                        );
+                        ui.radio_value(&mut self.fractal_type, FractalType::Mandelbrot, "Mandelbrot");
+                        ui.radio_value(&mut self.fractal_type, FractalType::BurningShip, "Burning Ship");
                         ui.radio_value(&mut self.fractal_type, FractalType::Tricorn, "Tricorn");
                     });
 
@@ -101,14 +93,11 @@ impl eframe::App for Application {
                         ui.radio_value(&mut self.color_scheme, ColorScheme::EARTH, "Earth");
                         ui.radio_value(&mut self.color_scheme, ColorScheme::SKY, "Sky");
                         ui.radio_value(&mut self.color_scheme, ColorScheme::CRIMSON, "Crimson");
-                        ui.radio_value(
-                            &mut self.color_scheme,
-                            ColorScheme::MIDNIGHTAMBER,
-                            "Midnight Amber",
-                        );
+                        ui.radio_value(&mut self.color_scheme, ColorScheme::MIDNIGHTAMBER, "Midnight Amber");
                         ui.radio_value(&mut self.color_scheme, ColorScheme::RAINBOW, "Rainbow");
                         ui.radio_value(&mut self.color_scheme, ColorScheme::SUNSET, "Sunset");
                         ui.radio_value(&mut self.color_scheme, ColorScheme::MIDDAY, "Midday");
+                        ui.radio_value(&mut self.color_scheme, ColorScheme::OCEAN, "Ocean");
                     });
                 });
             });
@@ -116,8 +105,7 @@ impl eframe::App for Application {
         // Display the main shader and position info
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.columns(2, |columns| {
-                columns[0]
-                    .vertical_centered(|ui| ui.label(format!("position: {}", self.camera.pos)));
+                columns[0].vertical_centered(|ui| ui.label(format!("position: {}", self.camera.pos)));
 
                 columns[1].vertical_centered(|ui| ui.label(format!("zoom: {}", self.camera.zoom)));
             });

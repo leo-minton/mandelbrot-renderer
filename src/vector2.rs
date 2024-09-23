@@ -2,7 +2,7 @@ use eframe::egui::{Pos2, Vec2, Vec2b};
 
 use std::fmt::Display;
 
-use std::ops::*;
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
